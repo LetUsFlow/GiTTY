@@ -41,9 +41,9 @@ func initialModel() model {
 
     maxlen := 0
     for _, choice := range choices {
-        connlen := len(fmt.Sprintf("%s@%s", choice.Username, choice.Hostname))
-        if connlen > maxlen {
-            maxlen = connlen
+        targetlen := len(GetLoginTarget(choice))
+        if targetlen > maxlen {
+            maxlen = targetlen
         }
     }
 
@@ -53,6 +53,10 @@ func initialModel() model {
         maxlen: maxlen,
         quit: false,
     }
+}
+
+func GetLoginTarget(conn connection) string {
+    return fmt.Sprintf("%s@%s", conn.Username, conn.Hostname)
 }
 
 func (m model) Init() tea.Cmd {
@@ -73,7 +77,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
         case "enter":
             return m, tea.Quit
         }
-        
+
         for i := 0; i < len(m.choices) && i < 10; i++ {
             if msg.String() == fmt.Sprintf("%d", i) {
                 m.selected = i
@@ -90,17 +94,17 @@ func (m model) View() string {
     grayedOutStyle := lipgloss.NewStyle().Padding(0, 2).Foreground(lipgloss.Color("240"))
 
     for i, choice := range m.choices {
-        conn := fmt.Sprintf("%s@%s", choice.Username, choice.Hostname)
+        target := GetLoginTarget(choice)
         number := fmt.Sprintf("%d.", i)
         if i > 9 {
             number = "  "
         }
         if i == m.selected {
-            output += selectedStyle.Render(fmt.Sprintf("> %s %s", number, conn))
+            output += selectedStyle.Render(fmt.Sprintf("> %s %s", number, target))
         } else {
-            output += style.Render(fmt.Sprintf("  %s %s", number, conn))
+            output += style.Render(fmt.Sprintf("  %s %s", number, target))
         }
-        output += fmt.Sprintf("%*s", m.maxlen - len(conn), "")
+        output += fmt.Sprintf("%*s", m.maxlen - len(target), "")
         output += grayedOutStyle.Render(choice.Comment) + "\n"
     }
     output += "Press 'enter' to select, 'q' to quit."
@@ -121,8 +125,8 @@ func main() {
         selected := m.choices[m.selected]
         fmt.Printf("Connecting...\n")
 
-        conn := fmt.Sprintf("%s@%s", selected.Username, selected.Hostname)
-        selected.Args = append(selected.Args, conn)
+        target := GetLoginTarget(selected)
+        selected.Args = append(selected.Args, target)
         cmd := exec.Command("ssh", selected.Args...)
         cmd.Stdout = os.Stdout
         cmd.Stderr = os.Stderr
