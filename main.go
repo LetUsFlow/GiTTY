@@ -5,15 +5,16 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/charmbracelet/lipgloss/table"
 )
 
 type model struct {
 	choices  []connection
 	selected int
-	maxlen   int
 	quit     bool
 }
 
@@ -22,6 +23,7 @@ type connection struct {
 	Hostname string   `json:"hostname"`
 	Comment  string   `json:"comment"`
 	Args     []string `json:"args"`
+	Command  string   `json:"command"`
 }
 
 func initialModel() model {
@@ -39,18 +41,9 @@ func initialModel() model {
 		os.Exit(1)
 	}
 
-	maxlen := 0
-	for _, choice := range choices {
-		targetlen := len(GetLoginTarget(choice))
-		if targetlen > maxlen {
-			maxlen = targetlen
-		}
-	}
-
 	return model{
 		choices:  choices,
 		selected: 0,
-		maxlen:   maxlen,
 		quit:     false,
 	}
 }
@@ -88,27 +81,49 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m model) View() string {
-	var output string
-	style := lipgloss.NewStyle().Padding(0, 2).Foreground(lipgloss.Color("205"))
-	selectedStyle := lipgloss.NewStyle().Padding(0, 2).Foreground(lipgloss.Color("10")).Bold(true)
-	grayedOutStyle := lipgloss.NewStyle().Padding(0, 2).Foreground(lipgloss.Color("240"))
+	baseStyle := lipgloss.NewStyle().Padding(0, 1)
+
+	selectedStyle := baseStyle.Foreground(lipgloss.Color("10")).Bold(true)
+	targetStyle := baseStyle.Foreground(lipgloss.Color("205"))
+	commandStyle := baseStyle.Foreground(lipgloss.Color("240"))
+	commentStyle := baseStyle
+
+	t := table.New().
+		StyleFunc(func(row, col int) lipgloss.Style {
+			return lipgloss.NewStyle().Padding(0, 0)
+		}).Border(lipgloss.HiddenBorder())
 
 	for i, choice := range m.choices {
 		target := GetLoginTarget(choice)
 		number := fmt.Sprintf("%d.", i)
-		if i > 9 {
-			number = "  "
-		}
+
+		var indicatorCell, targetCell string
+
 		if i == m.selected {
-			output += selectedStyle.Render(fmt.Sprintf("> %s %s", number, target))
+			indicatorCell = selectedStyle.Render("> " + number)
+			targetCell = selectedStyle.Render(target)
 		} else {
-			output += style.Render(fmt.Sprintf("  %s %s", number, target))
+			indicatorCell = targetStyle.Render("  " + number)
+			targetCell = targetStyle.Render(target)
 		}
-		output += fmt.Sprintf("%*s", m.maxlen-len(target), "")
-		output += grayedOutStyle.Render(choice.Comment) + "\n"
+
+		commandCell := commandStyle.Render(choice.Command)
+		commentCell := commentStyle.Render(choice.Comment)
+
+		t.Row(
+			indicatorCell,
+			targetCell,
+			commandCell,
+			commentCell,
+		)
 	}
-	output += "Press 'enter' to select, 'q' to quit."
-	return output
+
+	var b strings.Builder
+	b.WriteString(t.Render())
+	b.WriteString("\n")
+	b.WriteString("Press 'enter' to select, 'q' to quit.")
+
+	return b.String()
 }
 
 func main() {
@@ -126,7 +141,7 @@ func main() {
 		fmt.Printf("Connecting...\n")
 
 		target := GetLoginTarget(selected)
-		selected.Args = append(selected.Args, target)
+		selected.Args = append(selected.Args, target, selected.Command)
 		cmd := exec.Command("ssh", selected.Args...)
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
