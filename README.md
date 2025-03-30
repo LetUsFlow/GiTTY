@@ -13,14 +13,14 @@ GiTTY reads its configuration from a file named `config.json`, which should be l
 
 Below are examples demonstrating the structure of the configuration.
 
-```json
+```jsonc
 [
   {
     "username": "admin",             // The username for the connection (required)
     "hostname": "example.com",       // The hostname or IP address of the server (required)
     "comment": "Test server",        // An optional comment for your reference
     "command": "echo 'Connected to example.com'", // An optional command to run after successful login
-    "args": [                       // An optional array of command-line arguments
+    "args": [                        // An optional array of command-line arguments
       "-p",
       "22"
     ]
@@ -31,6 +31,7 @@ Below are examples demonstrating the structure of the configuration.
   }
 ]
 ```
+Important: The comments in this JSON example are for explanation and will cause errors if included in a real configuration file.
 
 ## Building
 
