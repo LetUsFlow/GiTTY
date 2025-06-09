@@ -9,7 +9,7 @@ Uses [bubbletea](https://github.com/charmbracelet/bubbletea) and [lipgloss](http
 
 # Example Configuration
 
-GiTTY reads its configuration from a file named `config.json`, which should be located in the same directory where you run the application. This file contains a JSON array of connection profiles.
+GiTTY reads its configuration from a file named `.gitty.json`, which should be located in the same directory where you run the application. This file contains a JSON array of connection profiles.
 
 Below are examples demonstrating the structure of the configuration.
 

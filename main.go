@@ -27,9 +27,9 @@ type connection struct {
 }
 
 func initialModel() model {
-	file, err := os.Open("config.json")
+	file, err := os.Open(".gitty.json")
 	if err != nil {
-		fmt.Println("Error opening file:", err)
+		fmt.Println("Error opening config:", err)
 		os.Exit(1)
 	}
 	defer file.Close()
