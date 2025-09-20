@@ -10,6 +10,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/lipgloss/table"
+	"github.com/tidwall/jsonc"
 )
 
 type model struct {
@@ -27,16 +28,15 @@ type connection struct {
 }
 
 func initialModel() model {
-	file, err := os.Open(".gitty.json")
+	fileBytes, err := os.ReadFile(".gitty.json")
 	if err != nil {
-		fmt.Println("Error opening config:", err)
+		fmt.Println("Error reading config:", err)
 		os.Exit(1)
 	}
-	defer file.Close()
 
 	var choices []connection
-	decoder := json.NewDecoder(file)
-	if err := decoder.Decode(&choices); err != nil {
+	err = json.Unmarshal(jsonc.ToJSON(fileBytes), &choices)
+	if err != nil {
 		fmt.Println("Error decoding config:", err)
 		os.Exit(1)
 	}

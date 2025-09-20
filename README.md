@@ -31,7 +31,6 @@ Below are examples demonstrating the structure of the configuration.
   }
 ]
 ```
-Important: The comments in this JSON example are for explanation and will cause errors if included in a real configuration file.
 
 ## Building
 
