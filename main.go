@@ -1,16 +1,15 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"os"
 	"os/exec"
 	"strings"
 
+	"github.com/BurntSushi/toml"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/lipgloss/table"
-	"github.com/tidwall/jsonc"
 )
 
 type model struct {
@@ -20,29 +19,32 @@ type model struct {
 }
 
 type connection struct {
-	Username string   `json:"username"`
-	Hostname string   `json:"hostname"`
-	Comment  string   `json:"comment"`
-	Args     []string `json:"args"`
-	Command  string   `json:"command"`
+	Username string   `toml:"username"`
+	Hostname string   `toml:"hostname"`
+	Comment  string   `toml:"comment"`
+	Args     []string `toml:"args"`
+	Command  string   `toml:"command"`
+}
+
+type config struct {
+	Connections []connection `toml:"connection"`
 }
 
 func initialModel() model {
-	fileBytes, err := os.ReadFile(".gitty.json")
+	fileBytes, err := os.ReadFile(".gitty.toml")
 	if err != nil {
 		fmt.Println("Error reading config:", err)
 		os.Exit(1)
 	}
 
-	var choices []connection
-	err = json.Unmarshal(jsonc.ToJSON(fileBytes), &choices)
-	if err != nil {
-		fmt.Println("Error decoding config:", err)
+	var cfg config
+	if _, err := toml.Decode(string(fileBytes), &cfg); err != nil {
+		fmt.Println("Error decoding TOML config:", err)
 		os.Exit(1)
 	}
 
 	return model{
-		choices:  choices,
+		choices:  cfg.Connections,
 		selected: 0,
 		quit:     false,
 	}
