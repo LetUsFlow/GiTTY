@@ -43,6 +43,13 @@ func initialModel() model {
 		os.Exit(1)
 	}
 
+	for i, conn := range cfg.Connections {
+		if conn.Hostname == "" {
+			fmt.Printf("Error: Connection %d is missing hostname\n", i)
+			os.Exit(1)
+		}
+	}
+
 	return model{
 		choices:  cfg.Connections,
 		selected: 0,
@@ -51,7 +58,10 @@ func initialModel() model {
 }
 
 func GetLoginTarget(conn connection) string {
-	return fmt.Sprintf("%s@%s", conn.Username, conn.Hostname)
+	if conn.Username != "" {
+		return fmt.Sprintf("%s@%s", conn.Username, conn.Hostname)
+	}
+	return conn.Hostname
 }
 
 func (m model) Init() tea.Cmd {

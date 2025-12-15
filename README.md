@@ -15,8 +15,8 @@ A minimal example is shown below; copy it into `.gitty.toml` and adjust values.
 
 ```toml
 [[connection]]
-username = "admin"            # required
 hostname = "example.com"      # required
+username = "admin"            # optional
 comment  = "Test server"      # optional
 command  = "echo 'Connected'" # optional
 args     = ["-p", "22"]       # optional
